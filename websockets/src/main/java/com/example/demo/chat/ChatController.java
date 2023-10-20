@@ -8,13 +8,12 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 public class ChatController {
     public static Set<User> user = new HashSet<>();
-
+    public static Map<String, List<String>> listUser = new HashMap<>();
     @MessageMapping("/chat.sendMessage")
     @SendTo("/topic/public")
     public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
@@ -32,10 +31,12 @@ public class ChatController {
                 user.setStatus("Online");
                 user.setColor("#32c787");
                 i++;
+                listUser.get(user.getName()).add(headerAccessor.getSessionId());
             }
         }
         if (i == 0) {
             user.add(users);
+            listUser.put(users.getName(), new ArrayList<>(List.of(headerAccessor.getSessionId())));
         }
         return chatMessage;
     }
