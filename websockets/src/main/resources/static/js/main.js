@@ -9,6 +9,8 @@ var messageArea = document.querySelector('#messageArea');
 var connectingElement = document.querySelector('.connecting');
 var stompClient = null;
 var username = null;
+var timeout = 3000;
+var status = null;
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
@@ -29,6 +31,26 @@ function connect(event) {
 
 }
 
+function checkStatus() {
+    setInterval(function () {
+        timeout = timeout - 1000;
+        if (timeout === 0) {
+            var chatMessage = {
+                sender: username,
+                content: null,
+                type: 'BUSY'
+            };
+
+            stompClient.send("/app/chat.status", {}, JSON.stringify(chatMessage));
+        }
+
+    }, 1000);
+}
+
+function setStatus(sta) {
+    status = sta;
+}
+
 function onConnected() {
     // Subscribe to the Public Topic
     stompClient.subscribe('/topic/public', onMessageReceived);
@@ -38,7 +60,7 @@ function onConnected() {
         {},
         JSON.stringify({sender: username, type: 'JOIN'})
     )
-
+    checkStatus();
     connectingElement.classList.add('hidden');
 }
 
@@ -122,6 +144,17 @@ function fetchAll(payload) {
             ' </div>\n' +
             ' </div>\n' +
             ' </div>';
+        if (payload[i].name === username) {
+            setStatus(payload[i].status);
+        }
+    }
+    if (status === 'BUSY') {
+        document.addEventListener("mousemove", handleKey);
+        document.addEventListener("keydown", handleKey);
+    }
+    if(status === 'ONLINE'){
+        document.removeEventListener('mousemove', handleKey);
+        document.removeEventListener('keydown', handleKey);
     }
     $('#usersList').html(usersTemplateHTML);
 }
@@ -132,6 +165,20 @@ function getAll() {
         fetchAll(data);
     });
     stompClient.send('/app/chat.listUser', {})
+}
+
+function setStatus(sta) {
+    status = sta;
+}
+
+function handleKey(){
+    timeout = 3000;
+    var chatMessage12 = {
+        sender: username,
+        content: null,
+        type: 'ONLINE'
+    };
+    stompClient.send("/app/chat.status", {}, JSON.stringify(chatMessage12));
 }
 
 usernameForm.addEventListener('submit', connect, true)

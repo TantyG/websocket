@@ -46,7 +46,7 @@ public class WebSocketEventListener {
                 ChatController.user.forEach(
                         user -> {
                             if (user.getName().equalsIgnoreCase(username)) {
-                                user.setStatus("Offline");
+                                user.setStatus("OFFLINE");
                                 user.setColor("#ff5652");
                             }
                         }
