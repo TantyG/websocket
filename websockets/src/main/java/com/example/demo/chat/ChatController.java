@@ -1,7 +1,7 @@
 package com.example.demo.chat;
 
 import com.example.demo.entity.User;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.*;
 
 @RestController
+@RequiredArgsConstructor
 public class ChatController {
-    @Autowired
-    private SimpMessageSendingOperations messagingTemplate;
+    private final SimpMessageSendingOperations messagingTemplate;
     public static Set<User> user = new HashSet<>();
     public static Map<String, List<String>> listUser = new HashMap<>();
     @MessageMapping("/chat.sendMessage")
@@ -24,7 +24,7 @@ public class ChatController {
         ChatController.user.forEach(item -> {
             if (item.getName().equals(chatMessage.getSender())) {
                 item.setColor("#32c787");
-                item.setStatus("Online");
+                item.setStatus("ONLINE");
             }
         });
         return chatMessage;
@@ -65,12 +65,11 @@ public class ChatController {
     }
 
     @MessageMapping("/chat.status")
-    public void changeStatus(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+    public void changeStatus(@Payload ChatMessage chatMessage) {
         // Add username in web socket session
         ChatController.user.forEach(item -> {
             if (item.getName().equals(chatMessage.getSender()) && (ChatController.listUser.get(item.getName()).size() == 1)) {
                 item.setStatus(chatMessage.getType().name());
-                System.out.println(item.getStatus());
                 if (item.getStatus().equalsIgnoreCase("ONLINE")) {
                     item.setColor("#32c787");
                 } else {
